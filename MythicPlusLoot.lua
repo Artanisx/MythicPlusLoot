@@ -7,8 +7,8 @@ local numScreen = ""
 
 local frame = CreateFrame("Frame");
 frame:RegisterEvent("ADDON_LOADED");
-
-local lootTable = CreateFrame("Frame", nil, PVEFrame)
+--[[
+local lootTable = CreateFrame("Frame", nil, PVEFrame) --code for displaing the mythic loot progression table on PVEFrame
 lootTable:SetPoint("TOPLEFT", PVEFrame)
 lootTable:SetPoint("BOTTOMRIGHT", PVEFrame)
 lootTable:SetScript("OnEnter", function(self)
@@ -31,6 +31,91 @@ end)
 lootTable:SetScript("OnLeave", function(self)
 	GameTooltip:Hide()
 end)
+--]]
+local stringtable = { 
+	{ " Key ", " Loot ", " Cache ", " Azerite " },
+	{ "0", "340", "-", "-" },
+	{ "2", "345", "355", "340" },
+	{ "3", "345", "355", "340" },
+	{ "4", "350", "360", "355" },
+	{ "5", "355", "360", "355" },
+	{ "6", "355", "365", "360" },
+	{ "7", "360", "370", "370" },
+	{ "8", "365", "370", "370" },
+	{ "9", "365", "375", "370" },
+	{ "10+", "370", "380", "385" },
+}
+
+local lootTable = CreateFrame("Frame", nil, PVEFrame)
+lootTable:SetPoint("TOPLEFT", PVEFrame)
+lootTable:SetPoint("BOTTOMRIGHT", PVEFrame)
+
+local viewtable
+local function CreateViewTable(addbackground)
+	viewtable = CreateFrame("Frame", "MythicPlusLootViewer", UIParent)
+	---viewtable = CreateFrame("Frame", nil, UIParent)
+	viewtable:SetSize(5, 5)
+	--viewtable:Hide()
+	viewtable:SetPoint("TOPLEFT", PVEFrame, "TOPRIGHT", 0, -255)	
+
+	local last, lastline
+	local widths = {}
+	for i=1, #stringtable do
+		for t=1, #stringtable[i] do
+			local s = viewtable:CreateFontString()
+			s:SetFontObject(GameFontNormalLarge)
+			if i == 1 then
+				s:SetTextColor(1, 1, 1)
+			else
+				s:SetTextColor(1, 1, 0)
+			end
+			s:SetText(stringtable[i][t])
+			if i == 1 and t == 1 then
+				s:SetPoint("TOPLEFT", viewtable)
+			elseif t == 1 then
+				s:SetPoint("TOPLEFT", lastline, "BOTTOMLEFT")
+			else
+				s:SetPoint("LEFT", last, "RIGHT")
+			end
+			if i == 1 then 
+				widths[t] = s:GetWidth()
+			else
+				s:SetWidth(widths[t])
+			end
+			last = s
+			if t == 1 then
+				lastline = s
+			end
+		end
+	end
+
+	if addbackground then
+		local width = 0
+		for i=1, #widths do
+			width = width + widths[i]
+		end
+		viewtable:SetSize(width + 15, (last:GetHeight() * #stringtable) + 15)
+		local backdrop = { 
+			bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", 
+			edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", tile = true, tileSize = 16, edgeSize = 16,
+				insets = { left = 4, right = 4, top = 4, bottom = 4 }
+		}
+		viewtable:SetBackdrop(backdrop)
+		viewtable:SetBackdropColor(0, 0, 0, 1)
+		viewtable.first:ClearAllPoints()
+		viewtable.first:SetPoint("TOPLEFT", 5, -5)
+	end
+
+end
+
+lootTable:SetScript("OnEnter", function(self)
+	if not viewtable then CreateViewTable(true) end
+	viewtable:Show()
+end)
+lootTable:SetScript("OnLeave", function(self)
+	viewtable:Hide()
+end)
+
 
 frame:SetScript("OnEvent",function(self,event,...)	
     if (event == "ADDON_LOADED") then		
