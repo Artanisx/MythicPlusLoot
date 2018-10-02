@@ -32,89 +32,83 @@ lootTable:SetScript("OnLeave", function(self)
 	GameTooltip:Hide()
 end)
 --]]
-local stringtable = { 
-	{ " Key ", " Loot ", " Cache ", " Azerite " },
-	{ "0", "340", "-", "-" },
-	{ "2", "345", "355", "340" },
-	{ "3", "345", "355", "340" },
-	{ "4", "350", "360", "355" },
-	{ "5", "355", "360", "355" },
-	{ "6", "355", "365", "360" },
-	{ "7", "360", "370", "370" },
-	{ "8", "365", "370", "370" },
-	{ "9", "365", "375", "370" },
-	{ "10+", "370", "380", "385" },
+local rewards  = { 
+	{ " Key ", " Loot ", " Cache ", " Azerite " },--1
+	{ "0", "340", "-", "-" },--2
+	{ "2", "345", "355", "340" },--3
+	{ "3", "345", "355", "340" },--4
+	{ "4", "350", "360", "355" },--5
+	{ "5", "355", "360", "355" },--6
+	{ "6", "355", "365", "355" },--7
+	{ "7", "360", "370", "370" },--8
+	{ "8", "365", "370", "370" },--9
+	{ "9", "365", "375", "370" },--10
+	{ "10+", "370", "380", "385" },--11
 }
 
-local lootTable = CreateFrame("Frame", nil, PVEFrame)
-lootTable:SetPoint("TOPLEFT", PVEFrame)
-lootTable:SetPoint("BOTTOMRIGHT", PVEFrame)
-
-local viewtable
-local function CreateViewTable(addbackground)
-	viewtable = CreateFrame("Frame", "MythicPlusLootViewer", UIParent)
-	---viewtable = CreateFrame("Frame", nil, UIParent)
-	viewtable:SetSize(5, 5)
-	--viewtable:Hide()
-	viewtable:SetPoint("TOPLEFT", PVEFrame, "TOPRIGHT", 0, -255)	
-
-	local last, lastline
-	local widths = {}
-	for i=1, #stringtable do
-		for t=1, #stringtable[i] do
-			local s = viewtable:CreateFontString()
-			s:SetFontObject(GameFontNormalLarge)
-			if i == 1 then
-				s:SetTextColor(1, 1, 1)
-			else
-				s:SetTextColor(1, 1, 0)
-			end
-			s:SetText(stringtable[i][t])
-			if i == 1 and t == 1 then
-				s:SetPoint("TOPLEFT", viewtable)
-			elseif t == 1 then
-				s:SetPoint("TOPLEFT", lastline, "BOTTOMLEFT")
-			else
-				s:SetPoint("LEFT", last, "RIGHT")
-			end
-			if i == 1 then 
-				widths[t] = s:GetWidth()
-			else
-				s:SetWidth(widths[t])
-			end
-			last = s
-			if t == 1 then
-				lastline = s
-			end
+local mplustable = CreateFrame("Frame", "MythisPlusLootTable", PVEFrame)
+mplustable:SetSize(50, 50)
+mplustable:SetPoint("TOPLEFT", PVEFrame, "TOPRIGHT", 0, -260)
+local last, lastline
+local widths = {}
+for i=1, #rewards do
+	for t=1, #rewards[i] do
+		local s = mplustable:CreateFontString()
+		--s:SetFontObject(GameFontNormal)
+		s:SetFontObject(GameFontNormalLarge)
+		if i == 1 then
+			s:SetTextColor(1, 1, 0) 
+		elseif (1 < i and  i < 5) then
+			s:SetTextColor(1, 1,1) 
+		elseif (4 < i and i < 8) then
+			s:SetTextColor(0.6, 1, 1) 
+		elseif (7 < i and i < 11) then
+			s:SetTextColor(1, 1, 0) 
+		elseif i==11 then
+			s:SetTextColor(0.2, 1, 0.3)
+		end
+		s:SetText(rewards[i][t])
+		if i == 1 and t == 1 then
+			s:SetPoint("TOPLEFT", mplustable)
+			mplustable.first = s
+		elseif t == 1 then
+			s:SetPoint("TOPLEFT", lastline, "BOTTOMLEFT")
+		else
+			s:SetPoint("LEFT", last, "RIGHT")
+		end
+		if i == 1 then 
+			widths[t] = s:GetWidth()
+		else
+			s:SetWidth(widths[t])
+		end
+		last = s
+		if t == 1 then
+			lastline = s
 		end
 	end
-
-	if addbackground then
-		local width = 0
-		for i=1, #widths do
-			width = width + widths[i]
-		end
-		viewtable:SetSize(width + 15, (last:GetHeight() * #stringtable) + 15)
-		local backdrop = { 
-			bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", 
-			edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", tile = true, tileSize = 16, edgeSize = 16,
-				insets = { left = 4, right = 4, top = 4, bottom = 4 }
-		}
-		viewtable:SetBackdrop(backdrop)
-		viewtable:SetBackdropColor(0, 0, 0, 1)
-		viewtable.first:ClearAllPoints()
-		viewtable.first:SetPoint("TOPLEFT", 5, -5)
-	end
-
 end
-
-lootTable:SetScript("OnEnter", function(self)
-	if not viewtable then CreateViewTable(true) end
-	viewtable:Show()
-end)
-lootTable:SetScript("OnLeave", function(self)
-	viewtable:Hide()
-end)
+local width = 0
+for i=1, #widths do
+	width = width + widths[i]
+end
+mplustable:SetSize(width + 10, (last:GetHeight() * #rewards) + 10)
+local backdrop = { 
+	bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", 
+	edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+	tile = true,
+	edgeSize = 16,
+	tileSize = 16,
+	insets = {
+		left = 4,
+		right = 4,
+		top = 4,
+		bottom = 4,
+	},
+}
+mplustable:SetBackdrop(backdrop)
+mplustable:SetBackdropColor(0, 0, 0)
+mplustable.first:ClearAllPoints()
+mplustable.first:SetPoint("TOPLEFT", 5, -5)
 
 
 frame:SetScript("OnEvent",function(self,event,...)	
